@@ -28,6 +28,7 @@ static void ClearConsole(HANDLE hConsole) {
 using std::cout;
 
 int main(int argc, char* argv[]) {
+	setlocale(LC_CTYPE, "");
 	if (argc > 1) {
 		for (int i = 1; i < argc; i++) {
 			if (_stricmp(argv[i], "-n") == 0) {
@@ -89,12 +90,23 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 start:
-	ClearConsole(GetStdHandle(STD_OUTPUT_HANDLE));
+	ClearConsole(hConsole);
 
+	CONSOLE_SCREEN_BUFFER_INFO csbi{};
+	GetConsoleScreenBufferInfo(hConsole, &csbi);
+	WORD oldAttrs = csbi.wAttributes;
 
 	cout << "Welcome to a simple Volume Serial Number changer\n\n";
-	cout << "1 = Print the serial number;\n2 = Backup serial number to file\n3 = Change serial number\n4 = Change serial number from file\n5 / q = Exit\nYour choice: ";
+	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN);
+	cout << "1 = Print the C: volume serial number;\n2 = Backup the C: volume serial number to file;\n";
+	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED);
+	cout << "3 = Change the C: volume serial number;\n4 = Change the C: volume serial number from file;\n5 = Change the C: volume serial number to a random one;\n";
+	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_BLUE);
+	cout << "6 / q = Exit\n";
+	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), oldAttrs);
+	cout << "Your choice: ";
 
 
 	HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
@@ -109,7 +121,7 @@ start:
 		ReadConsoleInputW(hStdin, &record, 1, &read);
 		if (record.EventType == KEY_EVENT && record.Event.KeyEvent.bKeyDown) {
 			WCHAR wch = record.Event.KeyEvent.uChar.UnicodeChar;
-			if (wch >= L'1' && wch <= L'5' || wch == 'q') {
+			if (wch >= L'1' && wch <= L'6' || wch == 'q') {
 				response = wch;
 				break;
 			}
@@ -119,7 +131,7 @@ start:
 	SetConsoleMode(hStdin, mode);
 	ClearConsole(GetStdHandle(STD_OUTPUT_HANDLE));
 
-	if (response == L'5' || response == 'q') {
+	if (response == L'6' || response == 'q') {
 		return 0;
 	}
 	if (response == L'1') {
@@ -265,6 +277,22 @@ start:
 			goto start;
 		}
 		cout << "The volume serial number is successfully changed, please restart your windows machine for the changes to take effect!\n\nPress any key to restart the program..";
+		_getch();
+		goto start;
+	} if (response == 5) {
+		std::random_device rd;
+		std::mt19937 rng(rd());
+		std::uniform_int_distribution<DWORD> dist(0, 255);
+		DWORD newVSN = (dist(rng) << 24) | (dist(rng) << 16) | (dist(rng) << 8) | (dist(rng));
+		if (!ChangeVSN("C", newVSN)) {
+			cout << "Error changing the volume serial number!\nPress any key to restart the program..";
+			_getch();
+			goto start;
+		}
+		cout << "The volume serial number is successfully changed to " << std::hex << std::uppercase
+			<< std::setw(4) << std::setfill('0') << ((uint16_t)(newVSN >> 16)) << "-"
+			<< std::setw(4) << std::setfill('0') << ((uint16_t)(newVSN & 0xFFFFu))
+			<< " (0x" << std::setw(8) << std::setfill('0') << newVSN << ", please restart your windows machine for the changes to take effect!\n\nPress any key to restart the program..";
 		_getch();
 		goto start;
 	}
