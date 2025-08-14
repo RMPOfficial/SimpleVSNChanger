@@ -3,6 +3,7 @@
 #include <fstream>
 #include <conio.h>
 #include <iomanip>
+#include <random>
 
 #pragma warning(push)
 #pragma warning(disable : 6031) // freopen return value skip warning
@@ -29,7 +30,7 @@ using std::cout;
 int main(int argc, char* argv[]) {
 	if (argc > 1) {
 		for (int i = 1; i < argc; i++) {
-			if (argv[i] == "-n" && argc >= i + 1) {
+			if (_stricmp(argv[i], "-n") == 0 && argc >= i + 1) {
 				std::string VSNcandidate = argv[i + 1];
 				if (VSNcandidate.empty()) {
 					cout << "Wrong serial number format.";
@@ -53,6 +54,22 @@ int main(int argc, char* argv[]) {
 					return 3;
 				}
 				cout << "The volume serial number is successfully changed, please restart your windows machine for the changes to take effect!";
+				return 0;
+			}
+			if (_stricmp(argv[i], "-r") == 0) {
+
+				std::random_device rd;
+				std::mt19937 rng(rd());
+				std::uniform_int_distribution<DWORD> dist(0, 255);
+				DWORD newVSN = (dist(rng) << 24) | (dist(rng) << 16) | (dist(rng) << 8) | (dist(rng));
+				if (!ChangeVSN("C", newVSN)) {
+					cout << "Error changing the volume serial number!";
+					return 3;
+				}
+				cout << "The volume serial number is successfully changed to " << std::hex << std::uppercase
+					<< std::setw(4) << std::setfill('0') << ((uint16_t)(newVSN >> 16)) << "-"
+					<< std::setw(4) << std::setfill('0') << ((uint16_t)(newVSN & 0xFFFFu))
+					<< " (0x" << std::setw(8) << std::setfill('0') << newVSN << ", please restart your windows machine for the changes to take effect!";
 				return 0;
 			}
 		}
