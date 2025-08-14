@@ -30,7 +30,11 @@ using std::cout;
 int main(int argc, char* argv[]) {
 	if (argc > 1) {
 		for (int i = 1; i < argc; i++) {
-			if (_stricmp(argv[i], "-n") == 0 && argc >= i + 1) {
+			if (_stricmp(argv[i], "-n") == 0) {
+				if (argc <= i + 1) {
+					cout << "Wrong usage! Correct usage: -n xxxx-xxxx";
+					return 1;
+				}
 				std::string VSNcandidate = argv[i + 1];
 				if (VSNcandidate.empty()) {
 					cout << "Wrong serial number format.";
@@ -80,6 +84,8 @@ int main(int argc, char* argv[]) {
 					<< std::setw(4) << std::setfill('0') << ((uint16_t)(VSN & 0xFFFFu));
 				return 0;
 			}
+			cout << "Invalid argument!";
+			return 0;
 		}
 	}
 
