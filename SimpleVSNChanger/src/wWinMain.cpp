@@ -72,6 +72,14 @@ int main(int argc, char* argv[]) {
 					<< " (0x" << std::setw(8) << std::setfill('0') << newVSN << ", please restart your windows machine for the changes to take effect!";
 				return 0;
 			}
+			if (_stricmp(argv[i], "-p") == 0) {
+
+				DWORD VSN = GetVSN("C");
+				std::cout << std::hex << std::uppercase
+					<< std::setw(4) << std::setfill('0') << ((uint16_t)(VSN >> 16)) << "-"
+					<< std::setw(4) << std::setfill('0') << ((uint16_t)(VSN & 0xFFFFu));
+				return 0;
+			}
 		}
 	}
 
