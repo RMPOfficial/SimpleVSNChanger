@@ -1,5 +1,5 @@
 # SimpleVSNChanger
-SimpleVSNChanger is a simple command line tool to print and change the Volume Serial Number often used by HWID algorhythms.
+SimpleVSNChanger is a simple command line tool to print and change the Volume Serial Number often used by HWID algorithms.
 
 ## Arguments
 -p : Prints the C: volume serial number.
